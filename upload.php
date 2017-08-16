@@ -1,5 +1,6 @@
 <?php
+  // get name of image
+  $name = ($_POST['iname']);
 
-
-$name = ($_POST['iname']);
-file_put_contents($name, base64_decode($_POST['data']));
+  // upload image
+  file_put_contents($name, base64_decode($_POST['data']));
