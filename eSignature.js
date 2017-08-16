@@ -55,7 +55,16 @@ function touchStarted() {
 // event on screen release
 function touchEnded() {
     isPressed = false;
-    isClear = false;
+
+    if  (
+        mouseX > 0 &&
+        mouseX < width &&
+        mouseY > 0 &&
+        mouseY < height
+        ) {
+        isClear = false;
+    }
+
     return false;
 }
 
