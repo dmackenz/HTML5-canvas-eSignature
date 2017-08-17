@@ -9,74 +9,135 @@ var past;
 // drawing boolean
 var isPressed = false;
 
-// context
-var canv;
-
 // check if canvas is clear
 var isClear = true;
 
-function setup() {
-    // create canvase
-    canv = createCanvas(windowWidth / 3, windowHeight / 5);
+var p5_1 = new p5(function(sketch) {
+    sketch.setup = function() {
+        var canv = sketch.createCanvas(sketch.windowWidth / 4, sketch.windowHeight / 5);
+        canv.parent('#eSignatureCanvas');
+    
+        sketch.background(255);
+        sketch.border();
+    };
 
-    // place canvas inside div
-    canv.parent('#eSignatureCanvas');
+    sketch.draw = function() {
+        // while pen is pressed
+        if (isPressed == true) {
+            // store previous location
+            past = present;
 
-    // draw border around window
-    border();
-}
+            // store new location
+            present = sketch.createVector(sketch.mouseX, sketch.mouseY);
+            
+            if (past) {
+                // new line connecting new and previous location
+                sketch.line(past.x, past.y, present.x, present.y); 
+            }
 
-function draw() {
-    // while pen is pressed
-    if (isPressed == true) {
-        // store previous location
-        past = present;
+            // lock scrolling
+            $('body').bind('mousewheel touchmove', lockScroll);
+        // when screen release clear past & present
+        } else {
+            // reset
+            present = null;
+            past = null;
 
-        // store new location
-        present = createVector(mouseX, mouseY);
-        
-        if (past) {
-            // new line connecting new and previous location
-            line(past.x, past.y, present.x, present.y);
+            // enable scrolling
+            $('body').unbind('mousewheel touchmove', lockScroll);
         }
-    // when screen release clear past & present
-    } else {
-        present = null;
-        past = null;
-    }
-}
+    };
 
-// event on screen touch
-function touchStarted() {
-    isPressed = true;
-    return false;
-}
-
-// event on screen release
-function touchEnded() {
-    isPressed = false;
-
-    if  (
-        mouseX > 0 &&
-        mouseX < width &&
-        mouseY > 0 &&
-        mouseY < height
-        ) {
-        isClear = false;
+    // lock window scrolling
+    function lockScroll(e) {
+        e.preventDefault();
     }
 
-    return false;
-}
+    sketch.border = function() {
+        var spacing = 2;
 
-// generate random string of length
-function randomString(len) {
-    var alphabet = "abcdefghijklmnopqrstuvwxyz";
-    var ret = "";
-    for (var i = 0; i < len; i++) {
-        ret += alphabet[floor(random(0, alphabet.length))];
+        // top left corner
+        var tl = {
+            x: 0,
+            y: 0
+        }
+
+        // bottom left corner
+        var bl = {
+            x: 0,
+            y: sketch.height - spacing
+        }
+
+        // top right corner
+        var tr = {
+            x: sketch.width - spacing,
+            y: 0
+        }
+
+        // bottom right corner
+        var br = {
+            x: sketch.width - spacing,
+            y: sketch.height - spacing
+        }
+
+        // border stroke weight
+        sketch.strokeWeight(1);
+
+        // draw border
+        sketch.line(tl.x, tl.y, tr.x, tr.y);
+        sketch.line(tl.x, tl.y, bl.x, bl.y);
+        sketch.line(tr.x, tr.y, br.x, br.y);
+        sketch.line(bl.x, bl.y, br.x, br.y);
+
+        // pen size
+        sketch.strokeWeight(penSize);
+    };
+
+
+    // event on screen touch
+    sketch.touchStarted = function() {
+        if  (
+            sketch.mouseX > 0 &&
+            sketch.mouseX < sketch.width &&
+            sketch.mouseY > 0 &&
+            sketch.mouseY < sketch.height
+            ) {
+            isPressed = true;
+        }
+    };
+
+    // event on screen release
+    sketch.touchEnded = function() {
+        isPressed = false;
+
+        if  (
+            sketch.mouseX > 0 &&
+            sketch.mouseX < sketch.width &&
+            sketch.mouseY > 0 &&
+            sketch.mouseY < sketch.height
+            ) {
+            isClear = false;
+        }
     }
-    return ret;
-}
+
+    // generate random string of length
+    sketch.randomString = function(len) {
+        var alphabet = "abcdefghijklmnopqrstuvwxyz";
+        var ret = "";
+        for (var i = 0; i < len; i++) {
+            ret += alphabet[sketch.floor(sketch.random(0, alphabet.length))];
+        }
+        return ret;
+    }
+
+    // clear image background
+    sketch.clearEvent = function() {
+        sketch.background(255);
+        sketch.border();
+        isClear = true;
+    }
+
+});
 
 // save image to server
 function saveEvent() {
@@ -90,7 +151,7 @@ function saveEvent() {
 
         $.ajax({
             type: "POST",
-            url: "upload.php",
+            url: "php-src/upload.php",
             data: { 
                 iname: iname,
                 data: data
@@ -98,52 +159,4 @@ function saveEvent() {
         }).done(function(e) {
         });
     }
-}
-
-// clear image background
-function clearEvent() {
-    background(255);
-    border();
-    isClear = true;
-}
-
-// create a border around the canvas
-function border() {
-    var spacing = 2;
-
-    // top left corner
-    var tl = {
-        x: 0,
-        y: 0
-    }
-
-    // bottom left corner
-    var bl = {
-        x: 0,
-        y: height - spacing
-    }
-
-    // top right corner
-    var tr = {
-        x: width - spacing,
-        y: 0
-    }
-
-    // bottom right corner
-    var br = {
-        x: width - spacing,
-        y: height - spacing
-    }
-
-    // border stroke weight
-    strokeWeight(1);
-
-    // draw border
-    line(tl.x, tl.y, tr.x, tr.y);
-    line(tl.x, tl.y, bl.x, bl.y);
-    line(tr.x, tr.y, br.x, br.y);
-    line(bl.x, bl.y, br.x, br.y);
-
-    // pen size
-    strokeWeight(penSize);
 }
